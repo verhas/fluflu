@@ -1,5 +1,7 @@
 package com.javax0.fluflu;
 
+import static com.javax0.fluflu.PackagePrefixCalculator.packagePrefix;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -13,15 +15,12 @@ import java.util.Date;
 import java.util.Scanner;
 
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FluentizerMaker {
 	final String className;
 	final String src;
 	final String packge;
 	final String core;
-	private static Logger log = LoggerFactory.getLogger(FluentizerMaker.class);
 
 	public FluentizerMaker(String packge, String className, String src,
 			String core) throws IOException {
@@ -39,35 +38,38 @@ public class FluentizerMaker {
 			return scanner.useDelimiter(
 					"somethind that does not happen even in the files").next();
 		} catch (IOException ioe) {
-			log.error(
-					"Resource '{}' can not be loaded. This is an internal error.",
-					name);
+			Out.error("Resource '" + name
+					+ "' can not be loaded. This is an internal error.");
 			return null;
 		}
 
 	}
 
-	final private static String defaultStateClassTemplate = loadTemplate("defaultStateClassTemplate.java");
 	final private static String stateClassHeaderTemplate = loadTemplate("stateClassHeaderTemplate.java");
 	final private static String methodTemplate = loadTemplate("methodTemplate.java");
 	final private static String endMethodTemplate = loadTemplate("endMethodTemplate.java");
-	final private static String defaultFirstLine = loadTemplate("defaultFirstLine.txt");
+	final private static String fluentClassTemplate = loadTemplate("fluentClassTemplate.java");
 
 	private String fileName = null;
 
 	private String getFullClassName() {
-		final String fullClassName;
-		if (packge == null) {
-			fullClassName = className;
-		} else {
-			fullClassName = packge + "." + className;
-		}
-		return fullClassName;
+		return packagePrefix(packge) + className;
 	}
 
 	private void constructFileName() {
 		fileName = src + "/" + getFullClassName().replaceAll("\\.", "/")
 				+ ".java";
+	}
+
+	private String replace(String s, String... arg) {
+		if (arg.length % 2 != 0)
+			throw new RuntimeException(
+					"replace was called with odd number of strings");
+		String result = s;
+		for (int i = 0; i < arg.length; i += 2) {
+			result = result.replaceAll(arg[i], arg[i + 1]);
+		}
+		return result;
 	}
 
 	/**
@@ -76,16 +78,18 @@ public class FluentizerMaker {
 	 * 
 	 * @throws IOException
 	 */
-	public void assertFileIsIntactOrNewOrEmpty() throws IOException,
-			FileModifiedException {
+	public boolean fileIsIntactOrNewOrEmpty() throws IOException {
 		File file = new File(fileName);
 		if (file.exists()) {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String firstLine = reader.readLine();
-			if (firstLine != null) {
-				assertFileIsIntact(reader, firstLine);
+			try (BufferedReader reader = new BufferedReader(
+					new FileReader(file))) {
+				String firstLine = reader.readLine();
+				if (firstLine != null) {
+					return fileIsIntact(reader, firstLine, fileName);
+				}
 			}
 		}
+		return true;
 	}
 
 	/**
@@ -106,45 +110,30 @@ public class FluentizerMaker {
 	 * @param firstLine
 	 *            the first line of the file that was already read
 	 */
-	private void assertFileIsIntact(BufferedReader reader, String firstLine)
-			throws FileModifiedException {
-		if (!firstLine.equals(defaultFirstLine)) {
-			try (Scanner scanner = new Scanner(reader)) {
-				String fileContent = scanner.useDelimiter(
-						"somethind that does not happen even in the files")
-						.next();
-				if (!firstLine.equals("//" + calculateHash(fileContent))) {
-					throw new FileModifiedException();
-				}
+	private boolean fileIsIntact(BufferedReader reader, String firstLine,
+			String fileName) {
+		try (Scanner scanner = new Scanner(reader)) {
+			String fileContent = scanner.useDelimiter(
+					"something that does not happen ever in the files").next();
+			if (!firstLine.equals("//" + calculateHash(fileContent))) {
+				Out.error("The file '"
+						+ fileName
+						+ "' was modified since it was generated. I will not overwrite it.");
+				return false;
 			}
+			return true;
 		}
-	}
-
-	public void createDefaultClass() throws IOException {
-		try {
-			assertFileIsIntactOrNewOrEmpty();
-		} catch (Exception e) {
-			log.error("File '{}' cannot be created.", fileName, e);
-			return;
-		}
-		log.debug("Creating default class {}.{} to fluentize {}", packge,
-				className, core);
-		File file = new File(fileName);
-		Writer writer = new FileWriter(file);
-		writer.write(defaultFirstLine);
-		writer.write("\n");
-		writer.write(fillInHeaderPlaceholders(defaultStateClassTemplate));
-		writer.close();
 	}
 
 	private String fillInHeaderPlaceholders(String s) {
-		String filled = s.replaceAll("className", className)//
-				.replaceAll("Core", core)//
-				.replaceAll("timestamp", new Date().toString());
+		String filled = replace(s,//
+				"#className#", className,//
+				"#Core#", core,//
+				"#timestamp#", new Date().toString());
 		if (packge == null) {
 			filled = filled.replaceAll("package\\s+packge;\n", "");
 		} else {
-			filled = filled.replaceAll("packge", packge);
+			filled = filled.replaceAll("#packge#", packge);
 		}
 		return filled;
 	}
@@ -153,36 +142,61 @@ public class FluentizerMaker {
 		return fillInHeaderPlaceholders(stateClassHeaderTemplate);
 	}
 
+	private String replaceAllMethodParams(String s, TransitionEdge edge,
+			StringBuilder arglist, StringBuilder paramlist) {
+		return replace(s,//
+				"#methodname#", edge.method.getName(),//
+				"#arglist#", arglist.toString(),//
+				"#paramlist#", paramlist.toString(),//
+				"#toState#", edge.targetState);
+	}
+
+	private static final String alphas = "abcdefghjkmnopqrstzwxy";
+
+	private String createArgumentName(int i) {
+		if (i < alphas.length()) {
+			return alphas.substring(i, i + 1);
+		} else {
+			return "p" + i;
+		}
+	}
+
 	public String generateStateClassMethod(TransitionEdge edge) {
 		StringBuilder arglist = new StringBuilder();
 		StringBuilder paramlist = new StringBuilder();
 		String sep = "";
 		int i = 0;
 		for (Class<?> paramClass : edge.method.getParameterTypes()) {
-			arglist.append(sep).append(paramClass.getCanonicalName()).append(" ")
-					.append("par" + i);
-			paramlist.append(sep).append("par" + i);
+			String paramClassCanonicalName = paramClass.getCanonicalName();
+			if (edge.method.isVarArgs()
+					&& i == edge.method.getParameterTypes().length - 1) {
+				paramClassCanonicalName = paramClassCanonicalName.replaceAll(
+						"\\[\\]", "...");
+			}
+			if (paramClassCanonicalName.startsWith("java.lang.")) {
+				paramClassCanonicalName = paramClassCanonicalName
+						.substring("java.lang.".length());
+			}
+			arglist.append(sep).append(paramClassCanonicalName).append(" ")
+					.append(createArgumentName(i));
+			paramlist.append(sep).append(createArgumentName(i));
 			sep = ", ";
 			i++;
 		}
-		final String methodBody;
-		if (edge.targetState == null) {
-			methodBody = endMethodTemplate
-					.replaceAll("methodname", edge.method.getName())
-					.replaceAll("arglist", arglist.toString())
-					.replaceAll("paramlist", paramlist.toString());
-		} else {
-			methodBody = methodTemplate
-					.replaceAll("toState", edge.targetState.getCanonicalName())
-					.replaceAll("methodname", edge.method.getName())
-					.replaceAll("arglist", arglist.toString())
-					.replaceAll("paramlist", paramlist.toString());
-		}
-		return methodBody;
+		return replaceAllMethodParams(
+				edge.targetState == null ? endMethodTemplate : methodTemplate,
+				edge, arglist, paramlist);
 	}
 
 	public String generateStateClassFooter() {
 		return "\n}";
+	}
+
+	public String generateFluentClass(String startState, String startMethod) {
+		return fillInHeaderPlaceholders(fluentClassTemplate)//
+				.replaceAll("#startState#", startState)//
+				.replaceAll("#startMethod#", startMethod)//
+		;
 	}
 
 	/**
@@ -207,9 +221,9 @@ public class FluentizerMaker {
 			md.update(buffer, 0, buffer.length);
 			return Base64.encodeBase64String(md.digest());
 		} catch (NoSuchAlgorithmException e) {
-			log.error("The algorithm '" + DIGEST_ALGORITHM
+			Out.error("The algorithm '" + DIGEST_ALGORITHM
 					+ "' is not available on this platform");
-			return "";
+			return Math.random() + "";
 		}
 	}
 
@@ -220,4 +234,5 @@ public class FluentizerMaker {
 		}
 
 	}
+
 }

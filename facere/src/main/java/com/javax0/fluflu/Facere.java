@@ -1,6 +1,5 @@
 package com.javax0.fluflu;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.cli.BasicParser;
@@ -9,79 +8,56 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Facere {
-	private static final String DEFAULT_CONFIG = "fluflu.yaml";
-	private static final String DEFAULT_SRC = "src/main/java";
+	private static final String DEFAULT_JAVA_DIRECTORY = "src/main/java";
 	private static final String DEFAULT_PACKGE = "";
-	private static final String DEFAULT_BIN = "target/classes";
+	private static final String DEFAULT_CLASSES_DIRECTORYS = "target/classes";
 	private static final String DEFAULT_CORE = null;
-	private static final String[] DEFAULT_CLASSES = null;
-	private static final boolean DEFAULT_RESET = false;
-
-	private static Logger log = LoggerFactory.getLogger(Facere.class);
 
 	private static Options createOptions() {
 		Options options = new Options();
-		options.addOption("r", "reset", false, "resets the configuration file");
-		options.addOption("c", "config", true,
-				"define an alternative configuration file. default is '"
-						+ DEFAULT_CONFIG + "'");
-		options.addOption("core", "core", true,
+		options.addOption("c", "class", true,
 				"define the core class to fluentize");
 		options.addOption("p", "package", true,
 				"define package for the fluentize classes");
-		options.addOption("classes", "classes", true,
-				"define comma separated list of fluentize classes");
-		options.addOption("s", "src", true,
-				"define the source location. default is '" + DEFAULT_SRC + "'");
-		options.addOption("b", "bin", true,
-				"define the .class files location. default is '" + DEFAULT_BIN
-						+ "'");
+		options.addOption("J", "java", true,
+				"define the source location. default is '"
+						+ DEFAULT_JAVA_DIRECTORY + "'");
+		options.addOption("C", "classes", true,
+				"define the .class files location. default is '"
+						+ DEFAULT_CLASSES_DIRECTORYS + "'");
 		options.addOption("h", "help", false, "print this text");
 		return options;
 	}
 
 	private final CommandLine line;
-	private String config;
-	private String src;
+	private String javaDirectory;
 	private String packge;
-	private String bin;
-	private String core;
-	private String[] classes;
-	private boolean reset;
+	private String classesDirectory;
+	private String classToFluentize;
 
-	private void setCore() {
-		if (line.hasOption("core")) {
-			core = line.getOptionValue("core");
+	private void setClassToFluentize() {
+		if (line.hasOption("class")) {
+			classToFluentize = line.getOptionValue("class");
 		} else {
-			core = DEFAULT_CORE;
+			classToFluentize = DEFAULT_CORE;
 		}
 	}
 
-	private void setConfig() {
-		if (line.hasOption("config")) {
-			config = line.getOptionValue("config");
+	private void setClassesDirectory() {
+		if (line.hasOption("classes")) {
+			classesDirectory = line.getOptionValue("classes");
 		} else {
-			config = DEFAULT_CONFIG;
+			classesDirectory = DEFAULT_CLASSES_DIRECTORYS;
 		}
 	}
 
-	private void setBin() {
-		if (line.hasOption("bin")) {
-			bin = line.getOptionValue("bin");
+	private void setJavaDirectory() {
+		if (line.hasOption("java")) {
+			javaDirectory = line.getOptionValue("java");
 		} else {
-			bin = DEFAULT_BIN;
-		}
-	}
-
-	private void setSrc() {
-		if (line.hasOption("src")) {
-			src = line.getOptionValue("src");
-		} else {
-			src = DEFAULT_SRC;
+			javaDirectory = DEFAULT_JAVA_DIRECTORY;
 		}
 	}
 
@@ -93,96 +69,26 @@ public class Facere {
 		}
 	}
 
-	private void setClasses() {
-		if (line.hasOption("classes")) {
-			classes = line.getOptionValue("classes").split(",");
-		} else {
-			classes = DEFAULT_CLASSES;
-		}
-	}
-
-	private void setReset() {
-		if (line.hasOption("reset")) {
-			reset = true;
-		} else {
-			reset = DEFAULT_RESET;
-		}
-	}
-
 	private Facere(CommandLine line) {
 		this.line = line;
-		setConfig();
-		setSrc();
+		setJavaDirectory();
 		setPackge();
-		setClasses();
-		setReset();
-		setBin();
-		setCore();
+		setClassesDirectory();
+		setClassToFluentize();
 	}
 
-	private void resetConfiguration() {
-		File configFile = new File(config);
-		if (configFile.exists()) {
-			if (configFile.delete()) {
-				log.info("Configuration file '{}' was deleted",
-						configFile.getAbsolutePath());
-			} else {
-				log.warn("I could not delete the configuration file '{}'",
-						configFile.getAbsolutePath());
-			}
-		} else {
-			log.warn("Configuration file '{}' does not exist",
-					configFile.getAbsolutePath());
-		}
-	}
-
-	private void createFluentizeClass(String className) throws IOException {
-		FluentizerMaker maker = new FluentizerMaker(packge, className, src,
-				core);
-		try {
-			maker.createDefaultClass();
-		} catch (Exception e) {
-			log.error("can not overwrite {} in package {}", className, packge,
-					e);
-		}
-	}
-
-	private void createFluentizeClasses() throws IOException {
-		if (classes.length == 1 && classes[0].matches("^\\d+$")) {
-			final int numberOfStates = Integer.parseInt(classes[0]);
-			for (int i = 0; i <= numberOfStates; i++) {
-				createFluentizeClass("State" + i);
-			}
-		} else {
-			for (String className : classes) {
-				createFluentizeClass(className);
-			}
-		}
-	}
-
-	private void fluentizeCore() throws ClassNotFoundException, IOException, FileModifiedException {
-		new ClassParser(bin, core, src).parse();
-	}
-
-	private void execute() throws ClassNotFoundException, IOException, FileModifiedException {
-		if (reset) {
-			resetConfiguration();
-		}
-		if (classes != null) {
-			createFluentizeClasses();
-		}
-		if (core != null) {
-			fluentizeCore();
-		}
+	private void execute() throws ClassNotFoundException, IOException {
+		new ClassParser(javaDirectory, classesDirectory, packge,
+				classToFluentize).parse();
 	}
 
 	/**
 	 * @param args
 	 * @throws IOException
-	 * @throws FileModifiedException 
+	 * @throws FileModifiedException
 	 */
 	public static void main(String[] args) throws IOException,
-			ClassNotFoundException, FileModifiedException {
+			ClassNotFoundException {
 		Options options = createOptions();
 
 		final CommandLine line;
@@ -195,7 +101,12 @@ public class Facere {
 		}
 		if (line.hasOption("help")) {
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("ant", options);
+			formatter.printHelp("facere", options);
+			return;
+		}
+		if (!line.hasOption("class")) {
+			Out.error("option 'class' is mandatory. Use -h or --help for more information.");
+			return;
 		}
 		Facere facere = new Facere(line);
 		facere.execute();

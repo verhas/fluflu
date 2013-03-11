@@ -1,27 +1,26 @@
 package com.javax0.fluflu;
 
+import static com.javax0.fluflu.PackagePrefixCalculator.packagePrefix;
+
 import java.io.IOException;
-import java.io.Writer;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ClassParser {
-	final private static Logger log = LoggerFactory
-			.getLogger(ClassParser.class);
-	final String bin;
-	final String core;
-	final String src;
+	final String classesDirectory;
+	final String classToFluentize;
+	final String javaDirectory;
+	final String packageName;
 
-	public ClassParser(String bin, String core, String src) {
-		this.bin = bin;
-		this.core = core;
-		this.src = src;
+	public ClassParser(String javaDirectory, String classesDirectory,
+			String packageName, String classToFluentize) {
+		this.classesDirectory = classesDirectory;
+		this.classToFluentize = classToFluentize;
+		this.javaDirectory = javaDirectory;
+		this.packageName = packageName;
 	}
 
 	private Transition[] getTransitions(Method method) {
@@ -41,13 +40,13 @@ public class ClassParser {
 		return transitions;
 	}
 
-	private final Map<Class<? extends State>, List<TransitionEdge>> transitionMap = new HashMap<>();
+	private final Map<String, List<TransitionEdge>> transitionMap = new HashMap<>();
 
 	private void processTransition(Transition transition, Method method) {
-		final Class<? extends State>[] fromStates = transition.from();
-		final Class<? extends State> toState = transition.to();
+		final String[] fromStates = transition.from();
+		final String toState = transition.to();
 		final boolean end = transition.end();
-		for (Class<? extends State> fromState : fromStates) {
+		for (String fromState : fromStates) {
 			if (!transitionMap.containsKey(fromState)) {
 				transitionMap.put(fromState, new LinkedList<TransitionEdge>());
 			}
@@ -76,33 +75,44 @@ public class ClassParser {
 		}
 	}
 
-	private String getStateJavaFile(Class<? extends State> state) {
-		return src + "/" + state.getCanonicalName().replaceAll("\\.", "/") + ".java";
+	private String getStateJavaFileName(String state) {
+		return (javaDirectory + "/" + packagePrefix(packageName) + state)
+				.replaceAll("\\.", "/") + ".java";
 	}
 
-	private void generateStateClass(Class<? extends State> state)
-			throws IOException, FileModifiedException {
-		FluentizerMaker maker = new FluentizerMaker(state.getPackage()
-				.getName(), state.getSimpleName(), src, core);
-		maker.assertFileIsIntactOrNewOrEmpty();
-		String header = maker.generateStateClassHeader();
-		StringBuilder body = new StringBuilder(header);
-		for (TransitionEdge edge : transitionMap.get(state)) {
-			body.append(maker.generateStateClassMethod(edge));
+	private void generateStateClass(String state) throws IOException {
+		FluentizerMaker maker = new FluentizerMaker(packageName, state,
+				javaDirectory, classToFluentize);
+		if (maker.fileIsIntactOrNewOrEmpty()) {
+			String header = maker.generateStateClassHeader();
+			StringBuilder body = new StringBuilder(header);
+			for (TransitionEdge edge : transitionMap.get(state)) {
+				body.append(maker.generateStateClassMethod(edge));
+			}
+			body.append(maker.generateStateClassFooter());
+			maker.overwrite(getStateJavaFileName(state), body.toString());
 		}
-		body.append(maker.generateStateClassFooter());
-		maker.overwrite(getStateJavaFile(state), body.toString());
 	}
 
-	private void generateStateClasses() throws IOException,
-			FileModifiedException {
-		for (Class<? extends State> state : transitionMap.keySet()) {
+	private void generateStateClasses() throws IOException {
+		for (String state : transitionMap.keySet()) {
 			generateStateClass(state);
 		}
 	}
 
-	private void parse(Class<?> klass) throws IOException,
-			FileModifiedException {
+	private void parse(Class<?> klass) throws IOException {
+		FluentApi fluentApiAnnotation = klass.getAnnotation(FluentApi.class);
+		if (fluentApiAnnotation != null) {
+			String className = fluentApiAnnotation.className();
+			String startState = fluentApiAnnotation.startState();
+			String startMethod = fluentApiAnnotation.startMethod();
+			FluentizerMaker maker = new FluentizerMaker(packageName, className,
+					javaDirectory, classToFluentize);
+			maker.fileIsIntactOrNewOrEmpty();
+			String fluentClassContent = maker.generateFluentClass(startState,
+					startMethod);
+			maker.overwrite(getStateJavaFileName(className), fluentClassContent);
+		}
 		Method[] methods = klass.getDeclaredMethods();
 		for (Method method : methods) {
 			parse(method);
@@ -113,13 +123,15 @@ public class ClassParser {
 
 	}
 
-	public void parse() throws ClassNotFoundException, IOException,
-			FileModifiedException {
+	public void parse() throws ClassNotFoundException, IOException {
 		FluClassLoader classLoader = new FluClassLoader(
-				ClassParser.class.getClassLoader(), bin);
-		Class<?> klass = classLoader.loadClass(core);
+				ClassParser.class.getClassLoader(), classesDirectory);
+		Class<?> klass = classLoader.loadClass(packagePrefix(packageName)
+				+ classToFluentize);
 		if (klass == null) {
-			log.warn("{}.class can not be parsed from directory {}.", core, bin);
+			Out.warn(classToFluentize
+					+ ".class can not be parsed from directory"
+					+ classesDirectory + ".");
 		} else {
 			parse(klass);
 		}

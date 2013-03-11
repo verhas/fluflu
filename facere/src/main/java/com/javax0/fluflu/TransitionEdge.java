@@ -5,9 +5,9 @@ import java.lang.reflect.Method;
 public class TransitionEdge {
 
 	Method method;
-	Class<? extends State> targetState;
+	String targetState;
 
-	TransitionEdge(Method method, Class<? extends State> targetState) {
+	TransitionEdge(Method method, String targetState) {
 		this.method = method;
 		this.targetState = targetState;
 	}

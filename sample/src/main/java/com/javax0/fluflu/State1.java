@@ -1,23 +1,26 @@
-//+5nXjwiTmJpZ9vhOUb4FCsZXfWoUVTaRIlLoiENxYiwhVFl9hOdB8cvhY+DRrKJptI8LNG3+4Nk2BnrerDHtAw==
+//ND/WcyTCTgfxeUASNvrTiWQ1up6+M7oI34n9/e8xd6NrUjBJ33q90nY9YULVWWjDMWEJQnlBkRXZhfYhtiK/xA==
 //DO NOT EDIT! THIS IS A FLUFLU GENERATED CLASS
-// DATE: Sat Mar 09 11:14:48 CET 2013
+// DATE: Mon Mar 11 05:34:35 CET 2013
 
 package com.javax0.fluflu;
 
-public class State1 implements com.javax0.fluflu.State {
-	private final com.javax0.fluflu.CoreClass core;
+public class State1 {
+	private final Zaku core;
 
-	public State1(com.javax0.fluflu.CoreClass core) {
+	public State1(Zaku core) {
 		this.core = core;
 	}
-	public com.javax0.fluflu.State1 end(){
-		return new com.javax0.fluflu.State1(core.end());	
+	public State0 with(String a, byte[] b){
+		return new State0(core.with(a, b));	
 	}
-	public com.javax0.fluflu.State0 with(java.lang.String par0, byte[] par1){
-		return new com.javax0.fluflu.State0(core.with(par0, par1));	
+	public State0 z(){
+		return new State0(core.z());	
 	}
-	public com.javax0.fluflu.State0 z(){
-		return new com.javax0.fluflu.State0(core.z());	
+	public State1 z(int a){
+		return new State1(core.z(a));	
+	}
+	public void end(){
+		core.end();	
 	}
 
 }

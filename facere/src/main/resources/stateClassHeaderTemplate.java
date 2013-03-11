@@ -1,11 +1,11 @@
 //DO NOT EDIT! THIS IS A FLUFLU GENERATED CLASS
-// DATE: timestamp
+// DATE: #timestamp#
 
-package packge;
+package #packge#;
 
-public class className implements com.javax0.fluflu.State {
-	private final Core core;
+public class #className# {
+	private final #Core# core;
 
-	public className(Core core) {
+	public #className#(#Core# core) {
 		this.core = core;
 	}

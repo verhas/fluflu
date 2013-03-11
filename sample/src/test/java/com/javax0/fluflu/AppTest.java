@@ -33,6 +33,8 @@ public class AppTest
      */
     public void testApp()
     {
+    	new State0(new Zaku() {
+		}).a().z().b().end();
         assertTrue( true );
     }
 }

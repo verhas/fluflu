@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Transitions {
-
-	Transition[] value();
-
+@Target(ElementType.TYPE)
+public @interface FluentApi {
+	String className();
+	String startState();
+	String startMethod();
 }

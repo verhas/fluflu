@@ -1,3 +1,3 @@
-	public void methodname(arglist){
-		core.methodname(paramlist);	
+	public void #methodname#(#arglist#){
+		core.#methodname#(#paramlist#);	
 	}
