@@ -4,6 +4,7 @@ import static com.javax0.fluflu.PackagePrefixCalculator.packagePrefix;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -100,19 +101,36 @@ public class ClassParser {
 		}
 	}
 
-	private void parse(Class<?> klass) throws IOException {
-		FluentApi fluentApiAnnotation = klass.getAnnotation(FluentApi.class);
+	private void generateFluentizedClass(Class<?> klass) throws IOException {
+		Fluentize fluentApiAnnotation = klass.getAnnotation(Fluentize.class);
 		if (fluentApiAnnotation != null) {
 			String className = fluentApiAnnotation.className();
 			String startState = fluentApiAnnotation.startState();
 			String startMethod = fluentApiAnnotation.startMethod();
-			FluentizerMaker maker = new FluentizerMaker(packageName, className,
-					javaDirectory, classToFluentize);
-			maker.fileIsIntactOrNewOrEmpty();
-			String fluentClassContent = maker.generateFluentClass(startState,
-					startMethod);
-			maker.overwrite(getStateJavaFileName(className), fluentClassContent);
+			if (className.length() > 0) {
+				StringBuilder body = new StringBuilder();
+				FluentizerMaker maker = new FluentizerMaker(packageName,
+						className, javaDirectory, classToFluentize);
+				if (maker.fileIsIntactOrNewOrEmpty()) {
+					body.append(maker.generateFluentClassHeader(startState,
+							startMethod));
+					if (startMethod.length() > 0) {
+						body.append(maker.generateStartMethod(startState,
+								startMethod));
+					}
+					if (Modifier.isAbstract(klass.getModifiers())) {
+						body.append(maker.generateFluentClassMethods(klass));
+					}
+					body.append(maker.generateFluentClassFooter());
+					maker.overwrite(getStateJavaFileName(className),
+							body.toString());
+				}
+			}
 		}
+	}
+
+	private void parse(Class<?> klass) throws IOException {
+		generateFluentizedClass(klass);
 		Method[] methods = klass.getDeclaredMethods();
 		for (Method method : methods) {
 			parse(method);

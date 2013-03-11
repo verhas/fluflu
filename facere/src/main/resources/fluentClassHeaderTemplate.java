@@ -5,8 +5,3 @@ package #packge#;
 
 public class #className# extends #Core# {
 
-	public static #startState# #startMethod#() {
-		return new #startState#(new #className#());
-	}
-	
-}

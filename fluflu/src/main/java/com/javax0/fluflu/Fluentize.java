@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface FluentApi {
-	String className();
-	String startState();
-	String startMethod();
+public @interface Fluentize {
+	String className() default "";
+	String startState() default "";
+	String startMethod() default "";
 }

@@ -9,6 +9,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
@@ -48,7 +51,9 @@ public class FluentizerMaker {
 	final private static String stateClassHeaderTemplate = loadTemplate("stateClassHeaderTemplate.java");
 	final private static String methodTemplate = loadTemplate("methodTemplate.java");
 	final private static String endMethodTemplate = loadTemplate("endMethodTemplate.java");
-	final private static String fluentClassTemplate = loadTemplate("fluentClassTemplate.java");
+	final private static String fluentClassHeaderTemplate = loadTemplate("fluentClassHeaderTemplate.java");
+	final private static String startMethodTemplate = loadTemplate("startMethodTemplate.java");
+	final private static String fluentMethodTemplate = loadTemplate("fluentMethodTemplate.java");
 
 	private String fileName = null;
 
@@ -145,7 +150,7 @@ public class FluentizerMaker {
 	private String replaceAllMethodParams(String s, TransitionEdge edge,
 			StringBuilder arglist, StringBuilder paramlist) {
 		return replace(s,//
-				"#methodname#", edge.method.getName(),//
+				"#methodName#", edge.method.getName(),//
 				"#arglist#", arglist.toString(),//
 				"#paramlist#", paramlist.toString(),//
 				"#toState#", edge.targetState);
@@ -161,28 +166,52 @@ public class FluentizerMaker {
 		}
 	}
 
-	public String generateStateClassMethod(TransitionEdge edge) {
+	private boolean thisIsTheLastParameter(Method method, int i) {
+		return i == method.getParameterTypes().length - 1;
+	}
+
+	private String getClassDeclarationName(Class<?> klass) {
+		String declaration = klass.getCanonicalName();
+		if (declaration.startsWith("java.lang.")) {
+			declaration = declaration.substring("java.lang.".length());
+		}
+		return declaration;
+	}
+
+	private String getMethodParameterClassDeclarationString(Method method, int i) {
+		String declaration = getClassDeclarationName(method.getParameterTypes()[i]);
+		if (method.isVarArgs() && thisIsTheLastParameter(method, i)) {
+			declaration = declaration.replaceAll("\\[\\]", "...");
+		}
+		return declaration;
+	}
+
+	private StringBuilder createArgList(Method method) {
 		StringBuilder arglist = new StringBuilder();
+		String sep = "";
+		for (int i = 0; i < method.getParameterTypes().length; i++) {
+			final String declaration = getMethodParameterClassDeclarationString(
+					method, i);
+			arglist.append(sep).append(declaration).append(" ")
+					.append(createArgumentName(i));
+			sep = ", ";
+		}
+		return arglist;
+	}
+
+	private StringBuilder createParamList(Method method) {
 		StringBuilder paramlist = new StringBuilder();
 		String sep = "";
-		int i = 0;
-		for (Class<?> paramClass : edge.method.getParameterTypes()) {
-			String paramClassCanonicalName = paramClass.getCanonicalName();
-			if (edge.method.isVarArgs()
-					&& i == edge.method.getParameterTypes().length - 1) {
-				paramClassCanonicalName = paramClassCanonicalName.replaceAll(
-						"\\[\\]", "...");
-			}
-			if (paramClassCanonicalName.startsWith("java.lang.")) {
-				paramClassCanonicalName = paramClassCanonicalName
-						.substring("java.lang.".length());
-			}
-			arglist.append(sep).append(paramClassCanonicalName).append(" ")
-					.append(createArgumentName(i));
+		for (int i = 0; i < method.getParameterTypes().length; i++) {
 			paramlist.append(sep).append(createArgumentName(i));
 			sep = ", ";
-			i++;
 		}
+		return paramlist;
+	}
+
+	public String generateStateClassMethod(TransitionEdge edge) {
+		StringBuilder arglist = createArgList(edge.method);
+		StringBuilder paramlist = createParamList(edge.method);
 		return replaceAllMethodParams(
 				edge.targetState == null ? endMethodTemplate : methodTemplate,
 				edge, arglist, paramlist);
@@ -192,11 +221,62 @@ public class FluentizerMaker {
 		return "\n}";
 	}
 
-	public String generateFluentClass(String startState, String startMethod) {
-		return fillInHeaderPlaceholders(fluentClassTemplate)//
-				.replaceAll("#startState#", startState)//
-				.replaceAll("#startMethod#", startMethod)//
-		;
+	public String generateFluentClassHeader(String startState,
+			String startMethod) {
+		return fillInHeaderPlaceholders(fluentClassHeaderTemplate);
+	}
+
+	public String generateStartMethod(String startState, String startMethod) {
+		return replace(startMethodTemplate,//
+				"#startState#", startState,//
+				"#startMethod#", startMethod,//
+				"#className#", className);
+	}
+
+	public String generateFluentClassFooter() {
+		return "\n}";
+	}
+
+	private String generateFluentMethod(Method method) {
+		String returnType = getClassDeclarationName(method.getReturnType());
+		String methodName = method.getName();
+		String arglist = createArgList(method).toString();
+		StringBuilder setterBody = new StringBuilder();
+		Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+		int i = 0;
+		for (Annotation[] annotations : parameterAnnotations) {
+			String par = createArgumentName(i);
+			i++;
+			for (Annotation annotation : annotations) {
+				if (annotation instanceof AssignTo) {
+					String fieldName = ((AssignTo) annotation).value();
+					setterBody.append("    ").append("core.").append(fieldName)
+							.append(" = ").append(par).append(";\n");
+				} else if (annotation instanceof AddTo) {
+					String fieldName = ((AddTo) annotation).value();
+					setterBody.append("    ").append("core.").append(fieldName)
+							.append(".add(").append(par).append(");\n");
+				}
+			}
+		}
+		return replace(fluentMethodTemplate,//
+				"#Core#", className,//
+				"#returnType#", returnType,//
+				"#methodName#", methodName,//
+				"#arglist#", arglist,//
+				"#setterBody#", setterBody.toString()//
+		);
+	}
+
+	public StringBuilder generateFluentClassMethods(Class<?> klass) {
+		Method[] methods = klass.getDeclaredMethods();
+		StringBuilder body = new StringBuilder();
+		for (Method method : methods) {
+			if (Modifier.isAbstract(method.getModifiers())) {
+				body.append(generateFluentMethod(method));
+			}
+		}
+		return body;
 	}
 
 	/**
