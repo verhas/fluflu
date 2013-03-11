@@ -29,7 +29,11 @@ public class AppTest extends TestCase {
 	 * Rigourous Test :-)
 	 */
 	public void testApp() {
-		CoreClass.start().a().z().b().with("nyanya", "nyanya".getBytes()).end();
+		State0 c = CoreClass.start().a().z();
+		State0 d = c.b().with("z", "z".getBytes());
+		State0 e = c.b().with("q", new byte[]{0,0,1});
+		d.end();
+		e.end();
 		assertTrue(true);
 	}
 }

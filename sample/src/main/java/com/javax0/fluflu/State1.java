@@ -1,13 +1,13 @@
-//7IoqfMjT6uaVTNAd5j890Q93HgwCpPfAvrXoF+UkSPp2fls1OgmWgJOFo8XmvmcsAtpJvamBLfTZeohkeY9O0w==
+//hUyNO3uMu98THkfki8chTL9oZVsOVnZMbmR0eVuO/1rL9Ni8ipKpLexn6tmGvX94IwBaLm0uoA9/GNqmGM4TjQ==
 //DO NOT EDIT! THIS IS A FLUFLU GENERATED CLASS
-// DATE: Mon Mar 11 16:35:58 CET 2013
+// DATE: Mon Mar 11 17:55:10 CET 2013
 
 package com.javax0.fluflu;
 
 public class State1 {
-	private final Zaku core;
+	private final ToBeFluentized core;
 
-	public State1(Zaku core) {
+	public State1(ToBeFluentized core) {
 		this.core = core;
 	}
 	public void end(){
