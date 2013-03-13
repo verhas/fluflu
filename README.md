@@ -108,8 +108,9 @@ Non terminal fluent api methods usually only collect the parameters. This is als
 
 Use the annotation `@AssignTo` when there is only one value you want to store. This will generate a method that will assign the passed value to your field. Use the annotation `@AddTo` when you want to have all the passed values (when the method is presented in the method chain more than once). In this case declare *AND INITIALIZE* your field to some variable type that can accommodate the method `.add(value)`.
 
-When you have all these annotations all you have to do is execute the command
+When you have all these annotations all you have to do is execute the commands
 
+    mvm clean install
     java -jar facere.jar -p com.javax0.fluflu -class ToBeFluentized 
 
 that will generate the state classes and the class that extends your abstract class (if you specified the class name in the annotation `@Fluentize`). Try and have a look at the generated code.
