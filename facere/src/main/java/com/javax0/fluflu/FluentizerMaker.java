@@ -15,9 +15,19 @@ import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
+
 import org.apache.commons.codec.binary.Base64;
+
+import com.javax0.aptools.FromThe;
+import com.javax0.aptools.The;
 
 public class FluentizerMaker {
 	final String className;
@@ -199,6 +209,20 @@ public class FluentizerMaker {
 		return arglist;
 	}
 
+	private StringBuilder createArgList(ExecutableElement methodElement) {
+		StringBuilder arglist = new StringBuilder();
+		String sep = "";
+		int i = 0;
+		for (VariableElement parameterElement : methodElement.getParameters()) {
+			final String declaration = parameterElement.asType().toString();
+			arglist.append(sep).append(declaration).append(" ")
+					.append(createArgumentName(i));
+			sep = ", ";
+			i++;
+		}
+		return arglist;
+	}
+
 	private StringBuilder createParamList(Method method) {
 		StringBuilder paramlist = new StringBuilder();
 		String sep = "";
@@ -266,6 +290,50 @@ public class FluentizerMaker {
 				"#arglist#", arglist,//
 				"#setterBody#", setterBody.toString()//
 		);
+	}
+
+	private String generateFluentMethod(ExecutableElement methodElement) {
+		String returnType = methodElement.getReturnType().toString();
+		String methodName = methodElement.getSimpleName().toString();
+		String arglist = createArgList(methodElement).toString();
+		StringBuilder setterBody = new StringBuilder();
+
+		List<? extends AnnotationMirror>[] parameterAnnotations = FromThe
+				.method(methodElement).getParameterAnnotations();
+		int i = 0;
+		for (List<? extends AnnotationMirror> annotations : parameterAnnotations) {
+			String par = createArgumentName(i);
+			i++;
+			for (AnnotationMirror annotation : annotations) {
+				if (annotation instanceof AssignTo) {
+					String fieldName = ((AssignTo) annotation).value();
+					setterBody.append("    ").append("core.").append(fieldName)
+							.append(" = ").append(par).append(";\n");
+				} else if (annotation instanceof AddTo) {
+					String fieldName = ((AddTo) annotation).value();
+					setterBody.append("    ").append("core.").append(fieldName)
+							.append(".add(").append(par).append(");\n");
+				}
+			}
+		}
+		return replace(fluentMethodTemplate,//
+				"#Core#", className,//
+				"#returnType#", returnType,//
+				"#methodName#", methodName,//
+				"#arglist#", arglist,//
+				"#setterBody#", setterBody.toString()//
+		);
+	}
+
+	public StringBuilder generateFluentClassMethod(Element classElement) {
+		StringBuilder body = new StringBuilder();
+		for (Element methodElement : classElement.getEnclosedElements()) {
+			if (methodElement.getKind() == ElementKind.METHOD
+					&& The.element(methodElement).isAbstract()) {
+				body.append(generateFluentMethod((ExecutableElement) methodElement));
+			}
+		}
+		return body;
 	}
 
 	public StringBuilder generateFluentClassMethods(Class<?> klass) {
