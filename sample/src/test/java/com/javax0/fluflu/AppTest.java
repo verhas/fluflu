@@ -27,8 +27,9 @@ public class AppTest extends TestCase {
 
 	/**
 	 * Rigourous Test :-)
+	 * @throws CloneNotSupportedException 
 	 */
-	public void testApp() {
+	public void testApp() throws CloneNotSupportedException {
 		State0 c = CoreClass.start().a().z();
 		State0 d = c.b().with("z", "z".getBytes());
 		State0 e = c.b().with("q", new byte[]{0,0,1});
