@@ -305,16 +305,22 @@ public class FluentizerMaker {
 			String par = createArgumentName(i);
 			i++;
 			for (AnnotationMirror annotation : annotations) {
-				if (annotation instanceof AssignTo) {
-					String fieldName = ((AssignTo) annotation).value();
+
+				String fieldName = FromThe.annotation(annotation)
+						.getStringValue();
+				if (annotation.getAnnotationType().toString()
+						.equals(AssignTo.class.getCanonicalName())) {
 					setterBody.append("    ").append("core.").append(fieldName)
 							.append(" = ").append(par).append(";\n");
-				} else if (annotation instanceof AddTo) {
-					String fieldName = ((AddTo) annotation).value();
+				} else if (annotation.getAnnotationType().toString()
+						.equals(AddTo.class.getCanonicalName())) {
 					setterBody.append("    ").append("core.").append(fieldName)
 							.append(".add(").append(par).append(");\n");
 				}
+				System.out.println("Annotation class= "
+						+ annotation.getAnnotationType());
 			}
+			System.out.println("setter body " + setterBody.toString());
 		}
 		return replace(fluentMethodTemplate,//
 				"#Core#", className,//
@@ -331,6 +337,18 @@ public class FluentizerMaker {
 			if (methodElement.getKind() == ElementKind.METHOD
 					&& The.element(methodElement).isAbstract()) {
 				body.append(generateFluentMethod((ExecutableElement) methodElement));
+			}
+		}
+		return body;
+	}
+
+	public StringBuilder generateFluentClassMethods(Element classElement) {
+		StringBuilder body = new StringBuilder();
+		List<ExecutableElement> methodElements = FromThe.element(classElement)
+				.getMethods();
+		for (ExecutableElement methodElement : methodElements) {
+			if (The.method(methodElement).isAbstract()) {
+				body.append(generateFluentMethod(methodElement));
 			}
 		}
 		return body;
