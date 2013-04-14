@@ -29,11 +29,13 @@
 				<groupId>${project.groupId}</groupId>
 				<artifactId>facere</artifactId>
 				<version>${project.version}</version>
+				<scope>compile</scope>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>fluflu</artifactId>
 				<version>${project.version}</version>
+				<scope>compile</scope>
 			</dependency>
 			<!--outer dependencies -->
 			<dependency>

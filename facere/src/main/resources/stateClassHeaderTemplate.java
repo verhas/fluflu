@@ -1,11 +1,11 @@
 //DO NOT EDIT! THIS IS A FLUFLU GENERATED CLASS
 // DATE: #timestamp#
 
-package #packge#;
+package #packageName#;
 
 public class #className# {
-	private final #Core# core;
+	private final #toBeFluentized# core;
 
-	public #className#(#Core# core) {
+	public #className#(#toBeFluentized# core) {
 		this.core = core;
 	}

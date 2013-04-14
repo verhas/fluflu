@@ -25,7 +25,7 @@ This can be reached implementing the methods `select`, `from` and `where` return
     // WRONG!!!
     CreateSql.select("colmn1","column2").from("tableName").from("thatTable")    
 
-which is simply wrong. To prevent this you have to define extra interfaces as depicted in the articles [The Java Fluent API Designer Crash Course](http://java.dzone.com/articles/java-fluent-api-designer-crash) You can also create classes instead of interfaces. Fluflu creates classes.
+which is simply wrong. To prevent this you have to define extra interfaces as depicted in the articles [The Java Fluent API Designer Crash Course](http://java.dzone.com/articles/java-fluent-api-designer-crash) You can also create classes instead of interfaces. Or you can use fluflu to create classes.
 
 ## What is fluflu?
 
@@ -36,13 +36,14 @@ Fluflu is a software to generate the classes that convert your method chaining c
 		    <dependency>
 			    <groupId>com.javax0.fluflu</groupId>
 			    <artifactId>fluflu</artifactId>
-			    <scope>1.0.0</scope>
+			    <version>1.0.0</version>
+			    <scope>compile</scope>
 		    </dependency>
     </dependencies>
 	
-This library defines the annotations that are used by the command line tool to generate the extra classes that do the work of fluentization.
+This library defines the annotations and the annotation processing tool libraries that handle the annotations during compile time and generate the extra classes in form of Java source code that do the work of fluentization.
 
-You can create the class with method chaining and you have to decide the order the methods can be called. This order can be arbitrary complex so long as long it can be described using a [http://en.wikipedia.org/wiki/Finite-state_machine](finite state automata). The states will become classes and the transitions between the states will be the methods. Every method in your class will have a pair in one or more of the generated classes. These methods will call your methods and will return an instance of another class representing the state where the transition brings the automata to.
+You can create the class with method chaining and you have to decide the order the methods should/may be called. This order can be arbitrary complex so long as long it can be described using [http://en.wikipedia.org/wiki/Finite-state_machine](finite state automata). The states will become classes and the transitions between the states will be the methods. Every method in your class will have a pair in one or more of the generated classes. These methods will call your methods and will return an instance of another class representing the state where the transition brings the automata to.
 
 When you have this library available and you designed your finite state automata you have to create your class that you want to fluentize. For example:
 

@@ -1,13 +1,13 @@
 package com.javax0.fluflu;
 
-import java.lang.reflect.Method;
+import javax.lang.model.element.ExecutableElement;
 
 public class TransitionEdge {
 
-	Method method;
+	ExecutableElement method;
 	String targetState;
 
-	TransitionEdge(Method method, String targetState) {
+	TransitionEdge(ExecutableElement method, String targetState) {
 		this.method = method;
 		this.targetState = targetState;
 	}
