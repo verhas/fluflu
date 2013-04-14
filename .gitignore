@@ -2,6 +2,7 @@ target
 .settings
 .classpath
 .project
+.factorypath 
 *.class
 
 # Package Files #

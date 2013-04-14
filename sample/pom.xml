@@ -4,11 +4,13 @@
 
 	<artifactId>sample</artifactId>
 	<packaging>jar</packaging>
+
 	<parent>
-		<groupId>com.javax0.fluflu</groupId>
-		<artifactId>fluflu0</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
 	</parent>
+
 	<name>300 sample</name>
 	<url>http://maven.apache.org</url>
 
@@ -17,18 +19,10 @@
 	</properties>
 	<dependencies>
 		<dependency>
-			<groupId>com.javax0.fluflu</groupId>
-			<artifactId>fluflu</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.javax0.fluflu</groupId>
-			<artifactId>facere</artifactId>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
+			<version>4.11</version>
 		</dependency>
 	</dependencies>
 </project>
