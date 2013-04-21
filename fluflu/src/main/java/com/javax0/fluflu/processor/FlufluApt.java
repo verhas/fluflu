@@ -1,6 +1,7 @@
-package com.javax0.fluflu;
+package com.javax0.fluflu.processor;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;

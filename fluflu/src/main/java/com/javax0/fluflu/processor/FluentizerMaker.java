@@ -1,4 +1,4 @@
-package com.javax0.fluflu;
+package com.javax0.fluflu.processor;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +13,8 @@ import javax.lang.model.element.ExecutableElement;
 import com.javax0.aptools.FromThe;
 import com.javax0.aptools.InThe;
 import com.javax0.aptools.The;
+import com.javax0.fluflu.AddTo;
+import com.javax0.fluflu.AssignTo;
 
 public class FluentizerMaker {
 	final String className;
@@ -47,9 +49,9 @@ public class FluentizerMaker {
 				.getResourceAsStream(name);
 				Scanner scanner = new Scanner(is, "utf-8")) {
 			return scanner.useDelimiter(
-					"somethind that does not happen even in the files").next();
+					"somethind that does not happen ever in the files").next();
 		} catch (IOException ioe) {
-			Out.error("Resource '" + name
+			System.err.println("Resource '" + name
 					+ "' can not be loaded. This is an internal error.");
 			return null;
 		}

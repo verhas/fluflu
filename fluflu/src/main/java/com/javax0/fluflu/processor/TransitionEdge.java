@@ -1,4 +1,4 @@
-package com.javax0.fluflu;
+package com.javax0.fluflu.processor;
 
 import javax.lang.model.element.ExecutableElement;
 

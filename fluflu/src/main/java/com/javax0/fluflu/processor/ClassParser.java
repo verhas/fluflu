@@ -1,4 +1,4 @@
-package com.javax0.fluflu;
+package com.javax0.fluflu.processor;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,6 +11,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 
 import com.javax0.aptools.FromThe;
+import com.javax0.fluflu.Transition;
+import com.javax0.fluflu.Transitions;
 
 public class ClassParser {
 	final Element classToFluentize;
