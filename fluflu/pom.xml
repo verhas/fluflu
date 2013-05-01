@@ -77,7 +77,7 @@
 		<site>
 			<id>gitHub</id>
 			<name>gitHub</name>
-			<url>git:git@github.com/verhas/fluflu</url>
+			<url>git:git@github.com/verhas/fluflu/fluflu</url>
 		</site>
 	</distributionManagement>
 
