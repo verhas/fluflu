@@ -18,11 +18,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	<scm>
-		<connection>scm:git:git@github.com:verhas/fluflu.git</connection>
-		<url>https://github.com/verhas/fluflu</url>
-		<developerConnection>scm:git:git@github.com:verhas/fluflu.git</developerConnection>
-	</scm>
+
 	<build>
 		<plugins>
 
