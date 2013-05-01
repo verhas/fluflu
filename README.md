@@ -13,7 +13,7 @@ You can read the following articles to get to know what fluent api is:
 
 [The Java Fluent API Designer Crash Course](http://java.dzone.com/articles/java-fluent-api-designer-crash)
 
-## What is fluent api for the impatient
+## Impatient? Do not want to read those articles?
 
 Fluent API in Java is a technique that results readable method call chaining. Example:
 
@@ -29,7 +29,7 @@ which is simply wrong. To prevent this you have to define extra interfaces as de
 
 ## What is fluflu?
 
-Fluflu is a software to generate the classes that convert your method chaining classes to real fluent API. It contains a library that you have to put on the compile and runtime classpath of your application and a command line tool. What you should depend in your maven project is:
+Fluflu is a software to generate the classes that convert your method chaining classes to real fluent API. It contains a library that you have to put on the compile and runtime classpath of your application and a command line tool. What you should put into your `pom.xml`:
 
 
     	<dependencies>
@@ -108,15 +108,6 @@ Note that you can use a method to be terminal as well as non terminal at the sam
 Non terminal fluent api methods usually only collect the parameters. This is also some coding practice that can and should be automated. If you do not want to write the collection coding yourself have some `protected` fields that will contain the values and annotate the parameters of the abstract methods of your class using `@AssignTo` and/or `@AddTo`. The value of these annotations should be the name of the field where the values passed to the fluent api are to be stored.
 
 Use the annotation `@AssignTo` when there is only one value you want to store. This will generate a method that will assign the passed value to your field. Use the annotation `@AddTo` when you want to have all the passed values (when the method is presented in the method chain more than once). In this case declare *AND INITIALIZE* your field to some variable type that can accommodate the method `.add(value)`.
-
-When you have all these annotations all you have to do is execute the commands
-
-    mvm clean install
-    java -jar facere.jar -p com.javax0.fluflu -class ToBeFluentized 
-
-that will generate the state classes and the class that extends your abstract class (if you specified the class name in the annotation `@Fluentize`). Try and have a look at the generated code.
-
-**NOTE** that flu flu facere will *never* overwrite any hand made file. It generates files that are non existent and will overwrite only files that it generated and which was not tampered. It writes an SHA-512 hash code bas64 encoded on the first line of the files (following the Java one line // comment starter) and if it does not match the unspaced content of the file it refuses to overwrite. In that case you have to delete it yourself. (Unspaced means that you can format the code if you want, insert new lines, spaces: does not matter. This can be important if your IDE automatically formats the code upon save.)
 
 ## Why Cloneable ?
 

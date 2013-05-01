@@ -1,8 +1,9 @@
 package com.javax0.aptools;
 
-public class GetThe {
-	public static StringTool string(String s) {
-		return new StringTool(s);
-	}
-	
+/**
+ * Alias class for {@link AbstractToolFactory}
+ * 
+ */
+public class GetThe extends AbstractToolFactory {
+
 }

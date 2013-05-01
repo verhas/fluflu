@@ -14,6 +14,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
 
+import com.javax0.aptools.Environment;
 import com.javax0.aptools.FromThe;
 import com.javax0.aptools.The;
 import com.javax0.aptools.There;
@@ -62,6 +63,7 @@ public class FlufluApt extends AbstractProcessor {
 
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    Environment.set(processingEnv);
     ClassWriter classWriter = new ClassWriter(processingEnv);
     for (Element rootElement : roundEnv.getRootElements()) {
       message(rootElement.toString());

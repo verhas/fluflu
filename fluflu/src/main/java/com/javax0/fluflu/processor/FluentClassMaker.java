@@ -67,12 +67,13 @@ public class FluentClassMaker {
     return replacePackageName(packageName, filled);
   }
 
-  private String replaceMethodParams(String s, TransitionEdge edge, String arglist, String paramlist) {
+  private String replaceMethodParams(String s, TransitionEdge edge, String arglist, String paramlist, String javaDoc) {
     return InThe.string(s).replace(//
         "methodName", edge.method.getSimpleName().toString(),//
         "arglist", arglist,//
         "paramlist", paramlist,//
-        "toState", edge.targetState);
+        "toState", edge.targetState,
+        "javaDoc",javaDoc);
   }
 
   /**
@@ -96,7 +97,8 @@ public class FluentClassMaker {
   public String generateStateClassMethod(TransitionEdge edge) {
     String arglist = FromThe.method(edge.method).createArgList();
     String paramlist = FromThe.method(edge.method).createParamList();
-    return replaceMethodParams(edge.targetState == null ? endMethodTemplate : methodTemplate, edge, arglist, paramlist);
+    String javaDoc =  FromThe.method(edge.method).getJavadoc();
+    return replaceMethodParams(edge.targetState == null ? endMethodTemplate : methodTemplate, edge, arglist, paramlist,javaDoc);
   }
 
   /**
