@@ -1,6 +1,5 @@
 package com.javax0.fluflu.processor;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Set;
 
@@ -25,14 +24,6 @@ public class FlufluApt extends AbstractProcessor {
   private void message(String s) {
     processingEnv.getMessager().printMessage(Kind.NOTE, s);
     System.out.println(s);
-    try {
-      FileWriter fw = new FileWriter("log.txt", true);
-      fw.write(s);
-      fw.close();
-    } catch (IOException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
-    }
   }
 
   private void generateFluentizedClassFrom(Element classElement) throws IOException {
