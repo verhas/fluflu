@@ -70,9 +70,16 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
+
 	</build>
+	<distributionManagement>
+		<site>
+			<id>gitHub</id>
+			<name>gitHub</name>
+			<url>git:git@github.com/verhas/fluflu</url>
+		</site>
+	</distributionManagement>
 
 	<dependencies>
 		<dependency>
