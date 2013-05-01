@@ -1,7 +1,7 @@
 package com.javax0.fluflu.processor;
 
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -21,64 +21,60 @@ import com.javax0.aptools.There;
 @SupportedAnnotationTypes("com.javax0.fluflu.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FlufluApt extends AbstractProcessor {
+  private void message(String s) {
+    processingEnv.getMessager().printMessage(Kind.NOTE, s);
+    System.out.println(s);
+    try {
+      FileWriter fw = new FileWriter("log.txt", true);
+      fw.write(s);
+      fw.close();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+  }
 
-	private void message(String s) {
-		processingEnv.getMessager().printMessage(Kind.NOTE, s);
-		System.out.println(s);
-	}
+  private void generateFluentizedClassFrom(Element classElement) throws IOException {
 
-	private void generateFluentizedClassFrom(Element classElement)
-			throws IOException {
+    AnnotationMirror fluentize = FromThe.element(classElement).getTheAnnotation("com.javax0.fluflu.Fluentize");
+    String startState = FromThe.annotation(fluentize).getStringValue("startState");
+    String className = FromThe.annotation(fluentize).getStringValue("className");
+    String startMethod = FromThe.annotation(fluentize).getStringValue("startMethod");
 
-		AnnotationMirror fluentize = FromThe.element(classElement)
-				.getTheAnnotation("com.javax0.fluflu.Fluentize");
-		String startState = FromThe.annotation(fluentize).getStringValue(
-				"startState");
-		String className = FromThe.annotation(fluentize).getStringValue(
-				"className");
-		String startMethod = FromThe.annotation(fluentize).getStringValue(
-				"startMethod");
+    String packageName = FromThe.element(classElement).getPackageName();
+    String classToFluentize = FromThe.element(classElement).getClassName();
 
-		String packageName = FromThe.element(classElement).getPackageName();
-		String classToFluentize = FromThe.element(classElement).getClassName();
+    StringBuilder body = new StringBuilder();
+    if (There.is(className)) {
+      FluentClassMaker maker = new FluentClassMaker(packageName, className, classToFluentize, null);
+      body.append(maker.generateFluentClassHeader(startState, startMethod));
+      if (There.is(startMethod)) {
+        body.append(maker.generateStartMethod(startState, startMethod));
+      }
+      if (The.element(classElement).isAbstract()) {
+        body.append(maker.generateFluentClassMethods(classElement));
+      }
+      body.append(maker.generateFluentClassFooter());
 
-		StringBuilder body = new StringBuilder();
-		if (There.is(className)) {
-			FluentizerMaker maker = new FluentizerMaker(packageName, className,
-					classToFluentize, null);
-			body.append(maker
-					.generateFluentClassHeader(startState, startMethod));
-			if (There.is(startMethod)) {
-				body.append(maker.generateStartMethod(startState, startMethod));
-			}
-			if (The.element(classElement).isAbstract()) {
-				body.append(maker.generateFluentClassMethods(classElement));
-			}
-			body.append(maker.generateFluentClassFooter());
+    }
+    new ClassWriter(processingEnv).writeSource(packageName, className, body.toString());
+  }
 
-		}
-		new ClassWriter(processingEnv).writeSource(packageName, className,
-				body.toString());
-	}
-
-	@Override
-	public boolean process(Set<? extends TypeElement> annotations,
-			RoundEnvironment roundEnv) {
-
-		for (Element rootElement : roundEnv.getRootElements()) {
-			if (The.element(rootElement).hasAnnotation(
-					"com.javax0.fluflu.Fluentize")) {
-				message("[RENAME] " + rootElement.getSimpleName());
-				try {
-					generateFluentizedClassFrom(rootElement);
-					new ClassParser(rootElement, new ClassWriter(processingEnv))
-							.parse();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		return false;
-	}
+  @Override
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    ClassWriter classWriter = new ClassWriter(processingEnv);
+    for (Element rootElement : roundEnv.getRootElements()) {
+      message(rootElement.toString());
+      if (The.element(rootElement).hasAnnotation("com.javax0.fluflu.Fluentize")) {
+        try {
+          generateFluentizedClassFrom(rootElement);
+          ClassParser parser = new ClassParser(rootElement, classWriter);
+          parser.parse();
+        } catch (IOException e) {
+          message(e.toString());
+        }
+      }
+    }
+    return false;
+  }
 }

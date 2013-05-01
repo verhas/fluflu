@@ -4,8 +4,8 @@
 package #packageName#;
 
 public class #className# {
-	private final #toBeFluentized# core;
+  private final #toBeFluentized# core;
 
-	public #className#(#toBeFluentized# core) {
-		this.core = core;
-	}
+  public #className#(#toBeFluentized# core) {
+    this.core = core;
+  }

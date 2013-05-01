@@ -1,0 +1,1 @@
+com.javax0.fluflu.ToBeFluentizedcom.javax0.fluflu.CoreClasscom.javax0.fluflu.State1com.javax0.fluflu.State0

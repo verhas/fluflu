@@ -8,7 +8,7 @@ public class AppTest {
 	}
 
 	/**
-	 * Rigourous Test :-)
+	 * Rigorous Test :-)
 	 * 
 	 * @throws CloneNotSupportedException
 	 */
@@ -18,7 +18,6 @@ public class AppTest {
 		State0 e = c.b().with("q", new byte[] { 0, 0, 1 });
 		d.end();
 		e.end();
-		assertTrue(true);
 	}
 
 	public static void main(String[] args) {
