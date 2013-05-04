@@ -154,7 +154,7 @@ public class FluentClassMaker {
     String returnType = FromThe.method(methodElement).getReturnType();
     String methodName = FromThe.method(methodElement).getName();
     String arglist = FromThe.method(methodElement).createArgList();
-    StringBuilder setterBody = new StringBuilder();
+    StringBuilder setterBody = new StringBuilder("\n");
 
     List<? extends AnnotationMirror>[] parameterAnnotations = FromThe.method(methodElement).getParameterAnnotations();
     int i = 0;
@@ -165,9 +165,9 @@ public class FluentClassMaker {
 
         String fieldName = FromThe.annotation(annotation).getStringValue();
         if (annotation.getAnnotationType().toString().equals(AssignTo.class.getCanonicalName())) {
-          setterBody.append("    ").append("core.").append(fieldName).append(" = ").append(par).append(";\n");
+          setterBody.append("\t\t").append("core.").append(fieldName).append(" = ").append(par).append(";\n");
         } else if (annotation.getAnnotationType().toString().equals(AddTo.class.getCanonicalName())) {
-          setterBody.append("    ").append("core.").append(fieldName).append(".add(").append(par).append(");\n");
+          setterBody.append("\t\t").append("core.").append(fieldName).append(".add(").append(par).append(");\n");
         }
         System.out.println("Annotation class= " + annotation.getAnnotationType());
       }

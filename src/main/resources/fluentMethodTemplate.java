@@ -1,3 +1,5 @@
+
+	@Override
 	public #returnType# #methodName#(#arglist#) {
 		#Core# core;
 		try {
@@ -6,5 +8,5 @@
 			core = this;
 		}
 		#setterBody#
-		return core;	
+		return core;
 	}

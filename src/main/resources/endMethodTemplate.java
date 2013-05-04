@@ -1,6 +1,6 @@
-  /**
-#javaDoc#
-   */
-  public void #methodName#(#arglist#){
+	/**
+	 #javaDoc#
+	 */
+	public void #methodName#(#arglist#){
 		core.#methodName#(#paramlist#);	
 	}
