@@ -17,9 +17,11 @@ public class TransitionEdge {
 
   ExecutableElement method;
   String            targetState;
+  String            name;
 
-  TransitionEdge(ExecutableElement method, String targetState) {
+  TransitionEdge(ExecutableElement method, String targetState, String name) {
     this.method = method;
     this.targetState = targetState;
+    this.name = name;
   }
 }

@@ -13,4 +13,6 @@ public @interface Transition {
 	String to() default "";
 
 	boolean end() default false;
+	
+	String name() default "";
 }

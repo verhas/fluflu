@@ -68,12 +68,14 @@ public class FluentClassMaker {
   }
 
   private String replaceMethodParams(String s, TransitionEdge edge, String arglist, String paramlist, String javaDoc) {
+    final String implementedName = edge.method.getSimpleName().toString();
+    final String generatedName = "".equals(edge.name) ? implementedName : edge.name;
     return InThe.string(s).replace(//
-        "methodName", edge.method.getSimpleName().toString(),//
+        "methodName", generatedName,//
+        "implementedName", implementedName,//
         "arglist", arglist,//
         "paramlist", paramlist,//
-        "toState", edge.targetState,
-        "javaDoc",javaDoc);
+        "toState", edge.targetState, "javaDoc", javaDoc);
   }
 
   /**
@@ -95,10 +97,10 @@ public class FluentClassMaker {
    * @return the java source code as string
    */
   public String generateStateClassMethod(TransitionEdge edge) {
-    String arglist = FromThe.method(edge.method).createArgList();
-    String paramlist = FromThe.method(edge.method).createParamList();
-    String javaDoc =  FromThe.method(edge.method).getJavadoc();
-    return replaceMethodParams(edge.targetState == null ? endMethodTemplate : methodTemplate, edge, arglist, paramlist,javaDoc);
+    final String arglist = FromThe.method(edge.method).createArgList();
+    final String paramlist = FromThe.method(edge.method).createParamList();
+    final String javaDoc = FromThe.method(edge.method).getJavadoc();
+    return replaceMethodParams(edge.targetState == null ? endMethodTemplate : methodTemplate, edge, arglist, paramlist, javaDoc);
   }
 
   /**

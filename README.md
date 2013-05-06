@@ -74,7 +74,7 @@ When you have this library available and you designed your finite state automata
     	}
     
     	Set<Integer> j = new HashSet<>(); 
-    	@Transition(from = "State1", to = "State1")
+    	@Transition(from = "State1", to = "State1", name="a")
     	public abstract ToBeFluentized z(@AddTo("j") int j);
     
     	@Transition(from = "State0", to = "State1")
@@ -97,9 +97,11 @@ What you see here is that the class is annotated using the annotation `@Fluentiz
 
 The optional arguments define the class that will contain the fluent interface extending your class and the name of the static method that will instantiate the first instance of the class when using the fluent API. If your class is abstract then the argument `className` is better to be specified otherwise you have to create a concrete class extending the abstract class.
 
-The methods that become part of the fluent API should be annotated using the annotation `@Transition`. This annotation should have a `from` parameter (String[]), which will name the states from where the method brings the api. The optional parameter `to` specified one state where the method ends. In the generated classes the `to` parameter will be the return type of the method and the `from` parameter specified which classes implement the method.
+The methods that become part of the fluent API should be annotated using the annotation `@Transition`. This annotation should have a `from` parameter (String[]), which will name the state or states from where the method brings the api from. The optional parameter `to` specified one state where the method ends. In the generated classes the `to` parameter will be the return type of the method and the `from` parameter specified which classes implement the method.
 
 If a method can bring the automata from different states to different states, for example from A to B, but when the automata is in state C then to D, the annotation `@Transitions` (note the plural) should be used that will contain multiple `@Transition` (singular) annotations.
+
+Note that in complex situations it can be handy to use different methods to implement the logically same transition. The hard solution would be to have a method that implements the different functionalities and decides which functionality to execute when. The other solution is to define a name for the generated method. To do that the annotation parameter `name` should be used. The only caveat is that if there are more than one methods that transition the automaton from specific state then they have to be separable by their signature and they all have to bring the automaton to the same state, otherwise the generated code will not compile. Since the Java compiler already implements such check, fluflu herself does not check or warn you of such situation.
 
 There can be methods in the fluent API that close the chain. It is recommended to name this method to be `end()`. When this method is called in your class usually all parameters are collected and are available and you can do the work in your class. Those methods may be chained when you use fluflu or may return `void` or just may return anything. To make a method terminal, closing the chain use the parameter `end=true` in the annotation `@Transition`.
 
