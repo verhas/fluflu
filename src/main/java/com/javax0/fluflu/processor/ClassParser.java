@@ -54,15 +54,20 @@ public class ClassParser {
 
   private void processTransition(Transition transition, ExecutableElement methodElement) {
     final String[] fromStates = transition.from();
-    final String toState = transition.to();
+    final String toState;
     final boolean end = transition.end();
+    if (end) {
+      toState = FromThe.method(methodElement).getReturnType();
+    } else {
+      toState = transition.to();
+    }
     final String name = transition.name();
     for (String fromState : fromStates) {
       if (!transitionMap.containsKey(fromState)) {
         transitionMap.put(fromState, new LinkedList<TransitionEdge>());
       }
       List<TransitionEdge> transitions = transitionMap.get(fromState);
-      transitions.add(new TransitionEdge(methodElement, end ? null : toState, name));
+      transitions.add(new TransitionEdge(methodElement, toState, name, end));
     }
   }
 

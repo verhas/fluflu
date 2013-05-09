@@ -32,7 +32,6 @@ public class FlufluApt extends AbstractProcessor {
     String startState = FromThe.annotation(fluentize).getStringValue("startState");
     String className = FromThe.annotation(fluentize).getStringValue("className");
     String startMethod = FromThe.annotation(fluentize).getStringValue("startMethod");
-
     String packageName = FromThe.element(classElement).getPackageName();
     String classToFluentize = FromThe.element(classElement).getClassName();
 
@@ -40,6 +39,7 @@ public class FlufluApt extends AbstractProcessor {
     if (There.is(className)) {
       FluentClassMaker maker = new FluentClassMaker(packageName, className, classToFluentize, null);
       body.append(maker.generateFluentClassHeader(startState, startMethod));
+
       if (There.is(startMethod)) {
         body.append(maker.generateStartMethod(startState, startMethod));
       }
@@ -48,8 +48,8 @@ public class FlufluApt extends AbstractProcessor {
       }
       body.append(maker.generateFluentClassFooter());
 
+      new ClassWriter(processingEnv).writeSource(packageName, className, body.toString());
     }
-    new ClassWriter(processingEnv).writeSource(packageName, className, body.toString());
   }
 
   @Override

@@ -1,6 +1,6 @@
 	/**
 	 #javaDoc#
 	 */
-	public void #methodName#(#arglist#){
-		core.#implementedName#(#paramlist#);	
+	public #toState# #methodName#(#arglist#){
+		#return# core.#implementedName#(#paramlist#);	
 	}

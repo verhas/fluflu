@@ -8,7 +8,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 public @interface Fluentize {
-	String className() default "";
-	String startState() default "";
-	String startMethod() default "";
+
+  String className() default "";
+
+  String startState() default "";
+
+  String startMethod() default "";
+
 }

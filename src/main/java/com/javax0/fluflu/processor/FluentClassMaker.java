@@ -70,12 +70,16 @@ public class FluentClassMaker {
   private String replaceMethodParams(String s, TransitionEdge edge, String arglist, String paramlist, String javaDoc) {
     final String implementedName = edge.method.getSimpleName().toString();
     final String generatedName = "".equals(edge.name) ? implementedName : edge.name;
+    final String returnCommandLiteral = "void".equals(edge.targetState) ? "" : "return";
+
     return InThe.string(s).replace(//
         "methodName", generatedName,//
         "implementedName", implementedName,//
         "arglist", arglist,//
         "paramlist", paramlist,//
-        "toState", edge.targetState, "javaDoc", javaDoc);
+        "toState", edge.targetState, //
+        "return", returnCommandLiteral,//
+        "javaDoc", javaDoc);
   }
 
   /**
@@ -100,7 +104,7 @@ public class FluentClassMaker {
     final String arglist = FromThe.method(edge.method).createArgList();
     final String paramlist = FromThe.method(edge.method).createParamList();
     final String javaDoc = FromThe.method(edge.method).getJavadoc();
-    return replaceMethodParams(edge.targetState == null ? endMethodTemplate : methodTemplate, edge, arglist, paramlist, javaDoc);
+    return replaceMethodParams(edge.end ? endMethodTemplate : methodTemplate, edge, arglist, paramlist, javaDoc);
   }
 
   /**
@@ -152,6 +156,14 @@ public class FluentClassMaker {
     return "\n}";
   }
 
+  /**
+   * Generate a method in the class that extends the abstract to be fluentized
+   * class and which method stores the passed arguments to the private fields
+   * denoted by the annotations on the method arguments.
+   * 
+   * @param methodElement
+   * @return
+   */
   private String generateFluentMethod(ExecutableElement methodElement) {
     String returnType = FromThe.method(methodElement).getReturnType();
     String methodName = FromThe.method(methodElement).getName();
