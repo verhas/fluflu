@@ -13,7 +13,7 @@ import javax.lang.model.element.ExecutableElement;
  * @author Peter Verhas
  * 
  */
-public class TransitionEdge {
+class TransitionEdge {
 
   ExecutableElement method;
   String            targetState;

@@ -1,7 +1,6 @@
 package com.javax0.fluflu.processor;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -14,105 +13,25 @@ import com.javax0.aptools.The;
 import com.javax0.fluflu.AddTo;
 import com.javax0.fluflu.AssignTo;
 
-public class FluentClassMaker {
-  final String className;
-  final String packageName;
-  final String core;
-  final String toBeFluentized;
+class FluentClassMaker extends ClassMaker {
+  private String              clonerMethodName;
+  final private static String fluentClassHeaderTemplate      = Template.load("fluentClassHeaderTemplate.java");
+  final private static String fluentMethodTemplate           = Template.load("fluentMethodTemplate.java");
+  final private static String fluentMethodTemplateWithCloner = Template.load("fluentMethodTemplateWithCloner.java");
+  final private static String startMethodTemplate            = Template.load("startMethodTemplate.java");
 
-  /**
-   * Create a new fluent api implementing class maker to create a fluent api
-   * helper class named `className`.
-   * 
-   * @param packageName
-   *          is the package in which the classes are generated.
-   * @param className
-   *          the name of the class to generate
-   * @param core
-   *          is the name of the builder class. This is either the original
-   *          class that contains the annotation or the class that extends the
-   *          original class if the class is abstract.
-   * @throws IOException
-   */
-  public FluentClassMaker(String packageName, String className, String core, String toBeFluentized) throws IOException {
-    this.className = className;
-    this.packageName = packageName;
-    this.core = core;
-    this.toBeFluentized = toBeFluentized;
-  }
-
-  final private static String stateClassHeaderTemplate  = Template.load("stateClassHeaderTemplate.java");
-  final private static String methodTemplate            = Template.load("methodTemplate.java");
-  final private static String endMethodTemplate         = Template.load("endMethodTemplate.java");
-  final private static String fluentClassHeaderTemplate = Template.load("fluentClassHeaderTemplate.java");
-  final private static String startMethodTemplate       = Template.load("startMethodTemplate.java");
-  final private static String fluentMethodTemplate      = Template.load("fluentMethodTemplate.java");
-
-  private String replacePackageName(String packageName, String s) {
-    if (packageName == null) {
-      s = s.replaceAll("package\\s+packageName;\n", "");
-    } else {
-      s = InThe.string(s).replace("packageName", packageName);
-    }
-    return s;
-  }
-
-  private String getActualHeader(String s) {
-    String filled = InThe.string(s).replace(//
-        "className", className,//
-        "Core", core,//
-        "toBeFluentized", toBeFluentized, //
-        "timestamp", new Date().toString());
-
-    return replacePackageName(packageName, filled);
-  }
-
-  private String replaceMethodParams(String s, TransitionEdge edge, String arglist, String paramlist, String javaDoc) {
-    final String implementedName = edge.method.getSimpleName().toString();
-    final String generatedName = "".equals(edge.name) ? implementedName : edge.name;
-    final String returnCommandLiteral = "void".equals(edge.targetState) ? "" : "return";
-
-    return InThe.string(s).replace(//
-        "methodName", generatedName,//
-        "implementedName", implementedName,//
-        "arglist", arglist,//
-        "paramlist", paramlist,//
-        "toState", edge.targetState, //
-        "return", returnCommandLiteral,//
-        "javaDoc", javaDoc);
+  FluentClassMaker(String packageName, String className, String core, String toBeFluentized, String clonerMethodName)
+      throws IOException {
+    super(packageName, className, core, toBeFluentized);
+    this.clonerMethodName = clonerMethodName;
   }
 
   /**
-   * Get the state class header from the template `stateClassHeaderTemplate` and
-   * replace the place holders `methodName`, `arglist`, `paramlist`, `toState`.
+   * Generate the last few lines of the fluent class.
    * 
    * @return the java source code as string
    */
-  public String generateStateClassHeader() {
-    return getActualHeader(stateClassHeaderTemplate);
-  }
-
-  /**
-   * Generate the state class method that represents the transition.
-   * 
-   * @param edge
-   *          from one transition to another
-   * 
-   * @return the java source code as string
-   */
-  public String generateStateClassMethod(TransitionEdge edge) {
-    final String arglist = FromThe.method(edge.method).createArgList();
-    final String paramlist = FromThe.method(edge.method).createParamList();
-    final String javaDoc = FromThe.method(edge.method).getJavadoc();
-    return replaceMethodParams(edge.end ? endMethodTemplate : methodTemplate, edge, arglist, paramlist, javaDoc);
-  }
-
-  /**
-   * Get the footer text of a state class
-   * 
-   * @return the java source code as string
-   */
-  public String generateStateClassFooter() {
+  String generateFluentClassFooter() {
     return "\n}";
   }
 
@@ -126,34 +45,26 @@ public class FluentClassMaker {
    *          class factory
    * @return the java source code as string
    */
-  public String generateFluentClassHeader(String startState, String startMethod) {
+  String generateFluentClassHeader(String startState, String startMethod) {
     return getActualHeader(fluentClassHeaderTemplate);
   }
 
   /**
-   * Generate the start method source code.
+   * Generate the methods for the fluent class.
    * 
-   * @param startState
-   *          the state where the fluent api starts
-   * @param startMethod
-   *          the method that is the start method and can be used as a state
-   *          class factory
-   * @return the java source code as string
-   */
-  public String generateStartMethod(String startState, String startMethod) {
-    return InThe.string(startMethodTemplate).replace(//
-        "startState", startState,//
-        "startMethod", startMethod,//
-        "className", className);
-  }
-
-  /**
-   * Generate the last few lines of the fluent class.
+   * @param classElement
    * 
-   * @return the java source code as string
+   * @return the java source code
    */
-  public String generateFluentClassFooter() {
-    return "\n}";
+  StringBuilder generateFluentClassMethods(Element classElement) {
+    StringBuilder body = new StringBuilder();
+    List<ExecutableElement> methodElements = FromThe.element(classElement).getMethods();
+    for (ExecutableElement methodElement : methodElements) {
+      if (The.method(methodElement).isAbstract()) {
+        body.append(generateFluentMethod(methodElement));
+      }
+    }
+    return body;
   }
 
   /**
@@ -183,35 +94,33 @@ public class FluentClassMaker {
         } else if (annotation.getAnnotationType().toString().equals(AddTo.class.getCanonicalName())) {
           setterBody.append("\t\t").append("core.").append(fieldName).append(".add(").append(par).append(");\n");
         }
-        System.out.println("Annotation class= " + annotation.getAnnotationType());
       }
-      System.out.println("setter body " + setterBody.toString());
     }
-    return InThe.string(fluentMethodTemplate).replace(//
+    return InThe.string(clonerMethodName == null ? fluentMethodTemplate : fluentMethodTemplateWithCloner).replace(//
         "Core", className,//
         "returnType", returnType,//
         "methodName", methodName,//
         "arglist", arglist,//
-        "setterBody", setterBody.toString()//
+        "setterBody", setterBody.toString(),//
+        "clonerMethodName", clonerMethodName//
         );
   }
 
   /**
-   * Generate the methods for the fluent class.
+   * Generate the start method source code.
    * 
-   * @param classElement
-   * 
-   * @return the java source code
+   * @param startState
+   *          the state where the fluent api starts
+   * @param startMethod
+   *          the method that is the start method and can be used as a state
+   *          class factory
+   * @return the java source code as string
    */
-  public StringBuilder generateFluentClassMethods(Element classElement) {
-    StringBuilder body = new StringBuilder();
-    List<ExecutableElement> methodElements = FromThe.element(classElement).getMethods();
-    for (ExecutableElement methodElement : methodElements) {
-      if (The.method(methodElement).isAbstract()) {
-        body.append(generateFluentMethod(methodElement));
-      }
-    }
-    return body;
+  String generateStartMethod(String startState, String startMethod) {
+    return InThe.string(startMethodTemplate).replace(//
+        "startState", startState,//
+        "startMethod", startMethod,//
+        "className", className);
   }
 
 }

@@ -1,6 +1,8 @@
 package com.javax0.fluflu.processor;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -21,10 +23,7 @@ import com.javax0.aptools.There;
 @SupportedAnnotationTypes("com.javax0.fluflu.*")
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 public class FlufluApt extends AbstractProcessor {
-  private void message(String s) {
-    processingEnv.getMessager().printMessage(Kind.NOTE, s);
-    System.out.println(s);
-  }
+  private String clonerMethodName;
 
   private void generateFluentizedClassFrom(Element classElement) throws IOException {
 
@@ -37,7 +36,7 @@ public class FlufluApt extends AbstractProcessor {
 
     StringBuilder body = new StringBuilder();
     if (There.is(className)) {
-      FluentClassMaker maker = new FluentClassMaker(packageName, className, classToFluentize, null);
+      FluentClassMaker maker = new FluentClassMaker(packageName, className, classToFluentize, null, clonerMethodName);
       body.append(maker.generateFluentClassHeader(startState, startMethod));
 
       if (There.is(startMethod)) {
@@ -57,14 +56,18 @@ public class FlufluApt extends AbstractProcessor {
     Environment.set(processingEnv);
     ClassWriter classWriter = new ClassWriter(processingEnv);
     for (Element rootElement : roundEnv.getRootElements()) {
-      message(rootElement.toString());
       if (The.element(rootElement).hasAnnotation("com.javax0.fluflu.Fluentize")) {
         try {
-          generateFluentizedClassFrom(rootElement);
           ClassParser parser = new ClassParser(rootElement, classWriter);
           parser.parse();
+          clonerMethodName = parser.clonerMethodName;
+          generateFluentizedClassFrom(rootElement);
         } catch (IOException e) {
-          message(e.toString());
+          Environment.get().getMessager().printMessage(Kind.ERROR, "Can not write outputfile.");
+          StringWriter sw = new StringWriter();
+          PrintWriter pw = new PrintWriter(sw);
+          e.printStackTrace(pw);
+          Environment.get().getMessager().printMessage(Kind.ERROR, sw.toString());
         }
       }
     }

@@ -9,17 +9,22 @@ import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.tools.Diagnostic.Kind;
 
+import com.javax0.aptools.Environment;
 import com.javax0.aptools.FromThe;
+import com.javax0.aptools.MethodTool;
+import com.javax0.fluflu.Cloner;
 import com.javax0.fluflu.Transition;
 import com.javax0.fluflu.Transitions;
 
-public class ClassParser {
+class ClassParser {
   final Element     classToFluentize;
   final ClassWriter classWriter;
   final String      core;
+  String    clonerMethodName = null;
 
-  public ClassParser(Element classToFluentize, ClassWriter classWriter) {
+  ClassParser(Element classToFluentize, ClassWriter classWriter) {
     this.classToFluentize = classToFluentize;
     this.classWriter = classWriter;
     AnnotationMirror fluentize = FromThe.element(classToFluentize).getTheAnnotation("com.javax0.fluflu.Fluentize");
@@ -31,6 +36,11 @@ public class ClassParser {
       coreName = FromThe.element(classToFluentize).getClassName();
     }
     core = coreName;
+  }
+
+  private boolean isCloner(ExecutableElement method) {
+    Cloner cloner = method.getAnnotation(Cloner.class);
+    return cloner != null;
   }
 
   private Transition[] getTransitions(ExecutableElement method) {
@@ -71,7 +81,19 @@ public class ClassParser {
     }
   }
 
+  private void processClonerMethod(ExecutableElement methodElement) {
+    MethodTool method = FromThe.method(methodElement);
+    if (method.getTheNumberOfParameters() > 0) {
+      Environment.get().getMessager().printMessage(Kind.ERROR, "Cloner method should have no argument.");
+    } else {
+      clonerMethodName = method.getName();
+    }
+  }
+
   private void parse(ExecutableElement methodElement) {
+    if (isCloner(methodElement)) {
+      processClonerMethod(methodElement);
+    }
     final Transition[] transitions = getTransitions(methodElement);
     if (transitions != null) {
       for (Transition transition : transitions) {
@@ -83,7 +105,7 @@ public class ClassParser {
   private void generateStateClass(String state) throws IOException {
     String packageName = FromThe.element(classToFluentize).getPackageName();
     String className = FromThe.element(classToFluentize).getClassName();
-    FluentClassMaker maker = new FluentClassMaker(packageName, state, core, className);
+    StateClassMaker maker = new StateClassMaker(packageName, state, core, className);
     String header = maker.generateStateClassHeader();
     StringBuilder body = new StringBuilder(header);
     for (TransitionEdge edge : transitionMap.get(state)) {
@@ -99,12 +121,11 @@ public class ClassParser {
     }
   }
 
-  public void parse() throws IOException {
+  void parse() throws IOException {
     for (ExecutableElement method : FromThe.element(classToFluentize).getMethods()) {
       parse(method);
     }
     generateStateClasses();
-
   }
 
 }
