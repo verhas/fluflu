@@ -137,12 +137,16 @@ This creates a clone of your class every time it is called if it is possible. Th
 		d.end();
 		e.end();
 		
-The two calls on the last line will not interfere with each other if you consistently create clones on each call to your fluent API. (Note that the sample class in this documentation does actually not.)			
+The two calls on the last line will not interfere with each other if you consistently create clones on each call to your fluent API. (Note that the sample class in this documentation does actually not.)
+
+The cloning, by default, uses the build-in cloning, which means shallow cloning. If you want to provide your own method to "clone" the core class you can write a method that returns a new copy the core class and the method should be annotated with the annotation `@Cloner`. The cloner method should return the core class type and should not have any argument.
 
 
 
 
 
-	
-	
-	
+
+
+
+
+
