@@ -18,12 +18,12 @@ You can read the following articles to get to know what fluent api is:
 Fluent API in Java is a technique that results readable method call chaining. Example:
 
 
-    CreateSql.select("colmn1","column2").from("tableName").where("column1 = 'value'")
+    CreateSql.select("column1","column2").from("tableName").where("column1 = 'value'")
 
 This can be reached implementing the methods `select`, `from` and `where` returning an instance of the the class `CreateSql`. (Note: `select` is static.) This is simple and straightforward. However this is far from real fluent API. This implementation will not prevent someone write
 
     // WRONG!!!
-    CreateSql.select("colmn1","column2").from("tableName").from("thatTable")    
+    CreateSql.select("column1","column2").from("tableName").from("anotherTable")    
 
 which is simply wrong. To prevent this you have to define extra interfaces as depicted in the articles [The Java Fluent API Designer Crash Course](http://java.dzone.com/articles/java-fluent-api-designer-crash) You can also create classes instead of interfaces. Or you can use fluflu to create classes.
 
