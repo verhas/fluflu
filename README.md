@@ -1,3 +1,5 @@
+This project is deprecated. If you want to generate fluent API then visit the project javageci in the same repo.
+
 fluflu
 ======
 
