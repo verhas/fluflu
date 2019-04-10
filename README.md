@@ -115,7 +115,7 @@ Use the annotation `@AssignTo` when there is only one value you want to store. T
 
 ## Why Cloneable ?
 
-Fluflu facers will create code:
+Fluflu will create code:
 
 	public com.javax0.fluflu.ToBeFluentized with(String a, byte[] b) {
 		CoreClass core;
@@ -141,7 +141,7 @@ This creates a clone of your class every time it is called if it is possible. Th
 		
 The two calls on the last line will not interfere with each other if you consistently create clones on each call to your fluent API. (Note that the sample class in this documentation does actually not.)
 
-The cloning, by default, uses the build-in cloning, which means shallow cloning. If you want to provide your own method to "clone" the core class you can write a method that returns a new copy the core class and the method should be annotated with the annotation `@Cloner`. The cloner method should return the core class type and should not have any argument.
+The cloning, by default, uses the built-in cloning, which means shallow cloning. If you want to provide your own method to "clone" the core class you can write a method that returns a new copy the core class and the method should be annotated with the annotation `@Cloner`. The cloner method should return the core class type and should not have any argument.
 
 
 
