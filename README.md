@@ -45,7 +45,7 @@ Fluflu is a software to generate the classes that convert your method chaining c
 	
 This library defines the annotations and the annotation processing tool libraries that handle the annotations during compile time and generate the extra classes in form of Java source code that do the work of fluentization.
 
-You can create the class with method chaining and you have to decide the order the methods should/may be called. This order can be arbitrary complex so long as long it can be described using [http://en.wikipedia.org/wiki/Finite-state_machine](finite state automata). The states will become classes and the transitions between the states will be the methods. Every method in your class will have a pair in one or more of the generated classes. These methods will call your methods and will return an instance of another class representing the state where the transition brings the automata to.
+You can create the class with method chaining and you have to decide the order the methods should/may be called. This order can be arbitrary complex so long as long it can be described using [finite state automata](http://en.wikipedia.org/wiki/Finite-state_machine). The states will become classes and the transitions between the states will be the methods. Every method in your class will have a pair in one or more of the generated classes. These methods will call your methods and will return an instance of another class representing the state where the transition brings the automata to.
 
 When you have this library available and you designed your finite state automata you have to create your class that you want to fluentize. For example:
 
